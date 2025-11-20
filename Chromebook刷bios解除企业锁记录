@@ -1,0 +1,147 @@
+Chromebook刷bios解除企业锁记录
+ 2025 11 20
+
+# 企业🔓
+
+先说一句废话。
+
+上周买了一台chromebook，想着按照教程上mrchromebox的脚本刷个固件。
+
+esc+refresh开机每次跳过开发者模式警告！就会显示设备所有者禁用了开发者。
+
+真的是害人不浅。
+
+
+
+# 刷bios解锁🔓
+
+怀着恐惧的心情去找教程🐶
+
+疯狂拆机，试着拆掉写保护螺丝来解锁。
+
+
+
+这样实在是不行，
+
+真的没有办法了吗，真的要自我革命了吗❓
+
+不知道哪来的勇气，作出了买一个编程器刷bios的决定，
+
+🥬当然，也是看了教程。
+
+（记得先确认是wson封装还是sop封装，买编程器要对应）
+
+
+
+感谢西行妖的博客，💐
+
+将芯片夹对准bios芯片夹好，将编程器连接电脑，
+
+电脑进入任意linux系统，u盘启动也行，🎇
+
+你也可以先跳过这段引用，
+
+
+
+“
+
+```Plain Text
+cd /tmp  
+echo "Downloading utilities"  
+wget https://mrchromebox.tech/files/util/  gbb_utility.tar.gz && tar -zxf gbb_utility.tar.gz  
+wget https://mrchromebox.tech/files/util/vpd.tar.gz && tar -zxf vpd.tar.gz  
+echo "----------------------"  
+echo "Press any key to begin"  
+echo "----------------------"  
+read -rsn1  
+echo "Read"  
+flashrom -p ch341a_spi -i GBB -r GBB.bin  
+flashrom -p ch341a_spi -i RW_VPD -r RW_VPD.bin  
+echo "Modify"  
+./gbb_utility -s --flags=0x8090 GBB.bin  
+./vpd -f RW_VPD.bin -s check_enrollment=0 -s   block_devmode=0  
+echo "Write"  
+flashrom -p ch341a_spi -i GBB -w GBB.bin  
+flashrom -p ch341a_spi -i RW_VPD -w RW_VPD.bin  
+echo "SUCCESS"  
+```
+
+
+执行完毕后，如果没有错误输出，则继续以下操作： 1.开机，按ctrl+d进入开发者模式 2.完成后，按下 ctrl+alt+shift+r 进行 powerwash 3.powerwash 后，立即转到 ctrl+alt+f2进入终端，以“root”身份登录并运行以下命令：
+
+```Plain Text
+tpm_manager_client take_ownership
+cryptohome --action=remove_firmware_management_parameters
+```
+
+
+两个命令都应显示成功，如果错误则降级到 v110 或更低版本 4.按 ctrl+alt+f1，再按下 ctrl+alt+shift+r 进行powerwash 5.搞定，成功接触保护锁。
+
+”
+
+我大失败了，
+
+不确定是什么问题，也不想给电脑降级之类的，
+
+想着不能白买一个编程器，😡
+
+于是查了一下，
+
+打算直接给bios刷上mrchromebox对glimmer主板的固件，
+
+固件的文件来在伟大的github，👻
+
+
+
+**安装flashrom**
+
+在终端中运行以下命令进行安装：
+
+```Plain Text
+sudo apt update
+sudo apt install flashrom
+```
+
+
+**备份当前BIOS（强烈建议）**
+
+执行以下命令，将当前BIOS备份到名为`backup_bios.rom`的文件中。如果系统提示找到多个芯片，你可能需要根据你的主板手册指定正确的编程器。
+
+```Plain Text
+sudo flashrom -p internal -r backup_bios.rom
+```
+
+
+如果备份成功，可以再执行一次验证备份文件的完整性：
+
+```Plain Text
+sudo flashrom -p internal -r backup_bios_verify.rom
+cmp backup_bios.rom backup_bios_verify.rom
+```
+
+
+如果`cmp`命令没有输出，则说明两个备份文件一致，备份是可靠的。
+
+**刷写新的BIOS固件**
+
+确认无误后，使用以下命令进行刷写。**在此期间，绝对不要断电或中断进程**。
+
+```Plain Text
+sudo flashrom -p internal -w YOUR_BIOS_FILE.rom
+```
+
+
+
+
+一开机看到兔子，
+
+舒服了🐭
+
+可以装linux了。
+
+
+
+希望有帮助，帮助，帮助，帮助
+
+
+
